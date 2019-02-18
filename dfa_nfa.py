@@ -1,10 +1,10 @@
 # review: do i really need this?
-""" from itertools import chain, combinations
+''' from itertools import chain, combinations
 def powerset(iterable):
     orig_set = set(iterable)
     return set(chain.from_iterable(combinations(orig_set, size)
                for size in range(len(s)+1)))
-"""
+'''
 # todo: more extensive documentation
 
 
@@ -31,17 +31,17 @@ def test_DFA():
     F = {1}
     delta = {(0, 'a'): 1, (1, 'a'): 0}
     dfa = DFA(q0, delta, F)
-    assert dfa.rejects("")
-    assert dfa.accepts("a")
-    assert dfa.rejects("aa")
-    assert dfa.accepts("aaa")
-    assert dfa.rejects("b")
-    assert dfa.rejects("ab")
+    assert dfa.rejects('')
+    assert dfa.accepts('a')
+    assert dfa.rejects('aa')
+    assert dfa.accepts('aaa')
+    assert dfa.rejects('b')
+    assert dfa.rejects('ab')
 
-if __name__ == "__main__":
-    print("Testing class DFA...")
+if __name__ == '__main__':
+    print('Testing class DFA...')
     test_DFA()
-    print("Test successful!")
+    print('Test successful!')
 
 
 class NFA:  # supports epsilon transitions
@@ -51,9 +51,9 @@ class NFA:  # supports epsilon transitions
         self.F = F
 
     def Delta(self, states, ch):
-        """
+        '''
         An extention of delta to a set function on states.
-        """
+        '''
         result = set()
         for q in states:
             result.update(self.delta.get((q, ch), set()))
@@ -64,7 +64,7 @@ class NFA:  # supports epsilon transitions
         new_states = states
         while new_states:
             result.update(new_states)
-            new_states = self.Delta(new_states, "") - result
+            new_states = self.Delta(new_states, '') - result
         return result
 
     def accepts(self, word):
@@ -84,46 +84,47 @@ def test_NFA():
     delta = {(0, 'a'): {1, 3}, (0, 'b'): {7}, (1, 'b'): {2}, (2, 'c'): {6},
              (3, 'a'): {5}, (3, 'b'): {4}, (5, 'a'): {4}}
     nfa = NFA(q0, delta, F)
-    assert nfa.accepts("ab")
-    assert nfa.accepts("aa")
-    assert nfa.rejects("abc")
-    assert nfa.rejects("a")
-    assert nfa.rejects("b")
-    assert nfa.rejects("bbbbbb")
-    assert nfa.rejects("aab")
-    assert nfa.rejects("aaaaaaabc")
-    assert nfa.rejects("aaa")
+    assert nfa.accepts('ab')
+    assert nfa.accepts('aa')
+    assert nfa.rejects('abc')
+    assert nfa.rejects('a')
+    assert nfa.rejects('b')
+    assert nfa.rejects('bbbbbb')
+    assert nfa.rejects('aab')
+    assert nfa.rejects('aaaaaaabc')
+    assert nfa.rejects('aaa')
 
     q0 = 0
     F = {3}
     delta = {(0, ''): {1, 2}, (1, 'a'): {3}, (2, 'b'): {3}}
     nfa = NFA(q0, delta, F)
-    assert nfa.accepts("a")
-    assert nfa.accepts("b")
-    assert nfa.rejects("ab")
-    assert nfa.rejects("aa")
-    assert nfa.rejects("bba")
+    assert nfa.accepts('a')
+    assert nfa.accepts('b')
+    assert nfa.rejects('ab')
+    assert nfa.rejects('aa')
+    assert nfa.rejects('bba')
 
     q0 = 0
     F = {3, 4}
     delta = {(0, ''): {1, 2}, (1, 'a'): {1, 3}, (2, ''): {3}, (3, 'c'): {4}}
     nfa = NFA(q0, delta, F)
-    assert nfa.accepts("a")
-    assert nfa.rejects("b")
-    assert nfa.rejects("ab")
-    assert nfa.accepts("aa")
-    assert nfa.rejects("bba")
-    assert nfa.accepts("c")
-    assert nfa.accepts("ac")
-    assert nfa.accepts("aac")
-    assert nfa.rejects("ca")
+    assert nfa.accepts('a')
+    assert nfa.rejects('b')
+    assert nfa.rejects('ab')
+    assert nfa.accepts('aa')
+    assert nfa.rejects('bba')
+    assert nfa.accepts('c')
+    assert nfa.accepts('ac')
+    assert nfa.accepts('aac')
+    assert nfa.rejects('ca')
 
-if __name__ == "__main__":
-    print("Testing class NFA...")
+if __name__ == '__main__':
+    print('Testing class NFA...')
     test_NFA()
-    print("Test successful!")
+    print('Test successful!')
 
-#note: All that follows is incomplete and untested.
+# note: All that follows is incomplete and untested.
+
 
 def NFA_to_DFA(nfa):
     def NFA_to_eps_free_NFA(nfa):
@@ -132,7 +133,7 @@ def NFA_to_DFA(nfa):
         other_start_states = nfa._epsilon_closure({nfa.q0}) - {nfa.q0}
         new_delta = {}
         for (q, ch), R in nfa.delta.items():
-            if ch == "":
+            if ch == '':
                 continue
             if q in other_start_states:
                 q = new_q0
@@ -149,7 +150,7 @@ def NFA_to_DFA(nfa):
 
     # fixme:
     def eps_free_NFA_to_DFA(nfa):
-        assert "" not in (ch for _, ch in nfa.delta())
+        assert '' not in (ch for _, ch in nfa.delta())
         new_q0 = set(nfa.q0)
         new_delta = {}
 
@@ -178,7 +179,7 @@ def test_NFA_to_DFA():
     nfa = NFA(q0, delta, F)
     print(NFA_to_DFA(nfa))
 
-if __name__ == "__main__":
-    print("Testing function NFA_to_DFA(nfa)...")
+if __name__ == '__main__':
+    print('Testing function NFA_to_DFA(nfa)...')
     test_NFA_to_DFA()
-    print("Test successful!")
+    print('Test successful!')
