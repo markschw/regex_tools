@@ -2,15 +2,11 @@
 Some functions for working with regular expressions, including parsing and
 constructing matchers/recognizers (finite-state automata) for them.
 
-Formal grammar for (infix-form) regexes:
+Formal grammar for the regex dialect adapted here:
 R    -> Char | RR | R'|'R | R'*' | '('R')'
 Char -> a | b | ... | z | A | B | ... | Z | 0 | 1 | ... | 9
 In addition, whitespace may appear anywhere in the regex and
 has no semantic meaning (only alphanumeric characters are currently supported)
-
-A regex in standardized form is defined the same, but has no whitespace
-whatsoever and has explicit concatenations, i.e. the rule R -> RR is
-replaced with R -> R'.'R
 '''
 
 # todo: handle invalid inputs to functions
@@ -116,7 +112,7 @@ class Node:
         self.right = right
 
     def __repr__(self):
-        return 'Node('{}', {}, {})'.format(self.data, self.left, self.right)
+        return 'Node({}, {}, {})'.format(self.data, self.left, self.right)
 
 
 def construct_parse_tree(regex):
@@ -174,7 +170,7 @@ def to_DOT_format(tree):
             return ''
         # todo: use a counter to label the states instead of node ids.
         sons = format_branch(tree.left) + format_branch(tree.right)
-        father = str(id(tree)) + ' [label=" + str(tree.data) + "];\n'
+        father = str(id(tree)) + ' [label="' + str(tree.data) + '"];\n'
         edges = ''
         for node in [tree.left, tree.right]:
             if node is not None:
@@ -200,6 +196,7 @@ def construct_matcher(regex):
     state_counter = 0
 
     def construct_NFA(tree):
+        # Thompson's algorithm
         nonlocal state_counter
         assert tree
         token = tree.data
@@ -279,6 +276,7 @@ def test_construct_matcher():
     assert matcher2.accepts('ab')
     assert matcher2.accepts('aabb')
     assert matcher2.rejects('ba')
+    assert matcher2.rejects('aba')
 
 if __name__ == '__main__':
     print('Testing function construct_matcher(regex)...')

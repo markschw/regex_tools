@@ -1,10 +1,5 @@
-# review: do i really need this?
-''' from itertools import chain, combinations
-def powerset(iterable):
-    orig_set = set(iterable)
-    return set(chain.from_iterable(combinations(orig_set, size)
-               for size in range(len(s)+1)))
-'''
+import string
+
 # todo: more extensive documentation
 
 
@@ -148,25 +143,40 @@ def NFA_to_DFA(nfa):
             new_F = (new_F - other_start_states) | {new_q0}
         return NFA(new_q0, new_delta, new_F)
 
-    # fixme:
+    state_counter = 0
+
     def eps_free_NFA_to_DFA(nfa):
-        assert '' not in (ch for _, ch in nfa.delta())
-        new_q0 = set(nfa.q0)
+        # The classical subset construction
+        assert '' not in (ch for _, ch in nfa.delta)
+        nonlocal state_counter
+        new_q0 = state_counter
+        new_states = {state_counter: new_q0}
+        state_counter += 1
         new_delta = {}
-
-        transitions_left = nfa.delta()
-        # todo: replace with deque from collections lib
-        queue = [key for key in nfa.delta() if key[0] == nfa.q0]
-        current_q = nfa.q0
-        # while transitions_left:
-        #     for q in
-        #     (q, ch in nfa.delta() if state)
-
-
-#       new_delta = { (q_set, ch): set().union( *(self.delta.get((q, ch), {}))
-#                     for q in q_set) for q_set in powerset(Q) }
-#       new_F = powerset(q for (q, _) in nfa.delta())
-#        return NFA(new_q0, new_delta, new_F)
+        work_set = {new_q0}
+        while work_set:
+            current_states = work_set.pop()
+            new_states[state_counter] = current_states
+            q = state_counter
+            state_counter += 1
+            for ch in string.ascii_letters + string.digits:
+                next_states = nfa.Delta(current_states, ch)
+                if not next_states:
+                    continue
+                if next_states in new_states.values():
+                    next_q = {r for r in new_states
+                              if new_states[r] = next_states}
+                else:
+                    next_q = state_counter
+                    new_states[state_counter] = next_q
+                    state_counter += 1
+                    new_delta[q, ch] = next_q
+                    work_set.add(next_q)
+        new_F = set()
+        for q in new_states:
+            if new_states[q] & nfa.F:
+                new_F.add(q)
+        return NFA(new_q0, new_delta, new_F)
 
     return eps_free_NFA_to_DFA(NFA_to_eps_free_NFA(nfa))
 
