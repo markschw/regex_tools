@@ -3,8 +3,8 @@ Some functions for working with regular expressions, including parsing and
 constructing matchers/recognizers (finite-state automata) for them.
 
 Formal grammar for the regex dialect adapted here:
-R    -> Char | RR | R'|'R | R'*' | '('R')'
-Char -> a | b | ... | z | A | B | ... | Z | 0 | 1 | ... | 9
+    R    -> Char | RR | R'|'R | R'*' | '('R')'
+    Char -> 'a' | ... | 'z' | 'A' | ... | 'Z' | '0' | '1' | ... | '9'
 In addition, whitespace may appear anywhere in the regex and
 has no semantic meaning (only alphanumeric characters are currently supported)
 '''
@@ -52,7 +52,7 @@ def infix_to_prefix(regex):
     semantically equivalent to the given regex.
     Formal grammar for prefix-form regexes:
         R    -> Char | '.'RR | '|'RR | '*'R
-        Char ->  a | ... | z | A | ... | Z | 0 | ... | 9
+        Char ->  'a' | ... | 'z' | 'A' | ... | 'Z' | '0' | ... | '9'
     '''
     # A version of Dijkstra's shunting-yard algorithm
     regex = standardize(regex)

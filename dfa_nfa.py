@@ -1,6 +1,5 @@
-import string
-
 # todo: more extensive documentation
+import unittest
 
 
 class DFA:
@@ -117,8 +116,6 @@ if __name__ == '__main__':
     print('Testing class NFA...')
     test_NFA()
     print('Test successful!')
-
-# note: All that follows is incomplete and untested.
 
 
 def NFA_to_DFA(nfa):
