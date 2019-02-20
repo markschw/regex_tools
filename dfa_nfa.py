@@ -130,17 +130,17 @@ def NFA_to_DFA(nfa):
         for (q, ch), R in nfa.delta.items():
             if ch == '':
                 continue
-            if q in other_start_states:
-                q = new_q0
             R = nfa._epsilon_closure(R)
-            if R & other_start_states:
-                R = (R - other_start_states) | {new_q0}
             if (q, ch) not in new_delta:
                 new_delta[q, ch] = set()
             new_delta[q, ch].update(R)
+            if q in other_start_states:
+                if (new_q0, ch) not in new_delta:
+                    new_delta[new_q0, ch] = set()
+                new_delta[new_q0, ch].update(R)
         new_F = nfa.F
         if new_F & other_start_states:
-            new_F = (new_F - other_start_states) | {new_q0}
+            new_F = new_F | {new_q0}
         return NFA(new_q0, new_delta, new_F)
 
     state_counter = 0
@@ -150,28 +150,26 @@ def NFA_to_DFA(nfa):
         assert '' not in (ch for _, ch in nfa.delta)
         nonlocal state_counter
         new_q0 = state_counter
-        new_states = {state_counter: new_q0}
+        new_states = {state_counter: {nfa.q0}}
         state_counter += 1
         new_delta = {}
         work_set = {new_q0}
         while work_set:
-            current_states = work_set.pop()
-            new_states[state_counter] = current_states
-            q = state_counter
-            state_counter += 1
-            for ch in string.ascii_letters + string.digits:
-                next_states = nfa.Delta(current_states, ch)
-                if not next_states:
+            q = work_set.pop()
+            state_set = new_states[q]
+            for ch in (ch for _, ch in nfa.delta):
+                next_state_set = nfa.Delta(state_set, ch)
+                if not next_state_set:
                     continue
-                if next_states in new_states.values():
+                if next_state_set in new_states.values():
                     next_q = {r for r in new_states
-                              if new_states[r] = next_states}
+                              if new_states[r] == next_state_set}.pop()
                 else:
                     next_q = state_counter
-                    new_states[state_counter] = next_q
+                    new_states[state_counter] = next_state_set
                     state_counter += 1
-                    new_delta[q, ch] = next_q
                     work_set.add(next_q)
+                new_delta[q, ch] = next_q
         new_F = set()
         for q in new_states:
             if new_states[q] & nfa.F:
@@ -187,9 +185,22 @@ def test_NFA_to_DFA():
     F = {3, 4}
     delta = {(0, ''): {1, 2}, (1, 'a'): {1, 3}, (2, ''): {3}, (3, 'c'): {4}}
     nfa = NFA(q0, delta, F)
-    print(NFA_to_DFA(nfa))
+    dfa = NFA_to_DFA(nfa)
+    print(dfa.q0)
+    print(dfa.delta)
+    print(dfa.F)
+
+    q0 = 1
+    F = {3, 4}
+    delta = {(1, ''): {3}, (1, '0'): {2}, (2, '1'): {2, 4}, (3, ''): {2},
+             (3, '0'): {4}, (4, '0'): {3}}
+    nfa = NFA(q0, delta, F)
+    dfa = NFA_to_DFA(nfa)
+    print(dfa.q0)
+    print(dfa.delta)
+    print(dfa.F)
 
 if __name__ == '__main__':
     print('Testing function NFA_to_DFA(nfa)...')
     test_NFA_to_DFA()
-    print('Test successful!')
+    print('Done!')

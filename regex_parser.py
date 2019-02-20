@@ -158,7 +158,9 @@ def test_construct_parse_tree():
     print('Parse tree printed!')
 
 if __name__ == '__main__':
+    print('Testing function construct_parse_tree()...')
     test_construct_parse_tree()
+    print('Done!')
 
 
 def to_DOT_format(tree):
@@ -189,7 +191,9 @@ def test_to_DOT_format():
     print('DOT-format tree printed!')
 
 if __name__ == '__main__':
+    print('Testing function to_DOT_format()...')
     test_to_DOT_format()
+    print('Done!')
 
 
 def construct_matcher(regex):
