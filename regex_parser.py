@@ -12,7 +12,7 @@ has no semantic meaning (only alphanumeric characters are currently supported)
 # todo: handle invalid inputs to functions
 # todo: go over documentation
 
-from dfa_nfa import NFA
+from dfa_nfa import NFA, NFA_to_DFA
 
 
 def standardize(regex):
@@ -245,7 +245,7 @@ def construct_matcher(regex):
             assert 0, 'Invalid token found in tree: ' + token
         return NFA(q0, delta, F)
 
-    return construct_NFA(construct_parse_tree(regex))
+    return NFA_to_DFA(construct_NFA(construct_parse_tree(regex)))
 
 
 # todo: a more comprehensive test

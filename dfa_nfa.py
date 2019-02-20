@@ -169,7 +169,9 @@ def NFA_to_DFA(nfa):
                     new_states[state_counter] = next_state_set
                     state_counter += 1
                     work_set.add(next_q)
-                new_delta[q, ch] = next_q
+                if (q, ch) not in new_delta.items():
+                    new_delta[q, ch] = set()
+                new_delta[q, ch].add(next_q)
         new_F = set()
         for q in new_states:
             if new_states[q] & nfa.F:
@@ -179,7 +181,7 @@ def NFA_to_DFA(nfa):
     return eps_free_NFA_to_DFA(NFA_to_eps_free_NFA(nfa))
 
 
-# todo:
+# todo: write an automated test
 def test_NFA_to_DFA():
     q0 = 0
     F = {3, 4}
