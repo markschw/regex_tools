@@ -12,6 +12,7 @@ has no semantic meaning (only alphanumeric characters are currently supported)
 # todo: handle invalid inputs to functions
 # todo: go over documentation
 
+import unittest
 from dfa_nfa import NFA, NFA_to_DFA
 
 
@@ -34,16 +35,12 @@ def standardize(regex):
     return ''.join(result)
 
 
-def test_stanardize():
-    assert standardize(' a |b c') == 'a|b.c'
-    assert standardize('ab| c ') == 'a.b|c'
-    assert standardize(' ( a * b c * ) *') == '(a*.b.c*)*'
-    assert standardize('d | (a*b |c *)e') == 'd|(a*.b|c*).e'
-
-if __name__ == '__main__':
-    print('Testing function standardize(regex)...')
-    test_stanardize()
-    print('Test successful!')
+class TestFunction_standardize(unittest.TestCase):
+    def test_standardize(self):
+        self.assertTrue(standardize(' a |b c') == 'a|b.c')
+        self.assertTrue(standardize('ab| c ') == 'a.b|c')
+        self.assertTrue(standardize(' ( a * b c * ) *') == '(a*.b.c*)*')
+        self.assertTrue(standardize('d | (a*b |c *)e') == 'd|(a*.b|c*).e')
 
 
 def infix_to_prefix(regex):

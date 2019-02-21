@@ -1,5 +1,8 @@
 # todo: more extensive documentation
+
 import unittest
+from collections import namedtuple
+from itertools import combinations_with_replacement
 
 
 class DFA:
@@ -20,22 +23,30 @@ class DFA:
         return not self.accepts(word)
 
 
-def test_DFA():
-    q0 = 0
-    F = {1}
-    delta = {(0, 'a'): 1, (1, 'a'): 0}
-    dfa = DFA(q0, delta, F)
-    assert dfa.rejects('')
-    assert dfa.accepts('a')
-    assert dfa.rejects('aa')
-    assert dfa.accepts('aaa')
-    assert dfa.rejects('b')
-    assert dfa.rejects('ab')
+class TestDFAMethods(unittest.TestCase):
+    def setUp(self):
+        q0 = 0
+        F = {1}
+        delta = {(0, 'a'): 1, (1, 'a'): 0}
+        self.dfa = DFA(q0, delta, F)
+        self.should_accept = ['a', 'aaa']
+        self.should_reject = ['', 'aa', 'b', 'ab']
 
-if __name__ == '__main__':
-    print('Testing class DFA...')
-    test_DFA()
-    print('Test successful!')
+    def test_accepts(self):
+        for word in self.should_accept:
+            self.assertTrue(self.dfa.accepts(word), "Word not accepted"
+                            " despite being in the DFA's language")
+        for word in self.should_reject:
+            self.assertFalse(self.dfa.accepts(word), "Word accepted"
+                             " despite not being in the DFA's language")
+
+    def test_rejects(self):
+        for word in self.should_accept:
+            self.assertFalse(self.dfa.rejects(word), "Word rejected"
+                             " despite being in the DFA's language")
+        for word in self.should_reject:
+            self.assertTrue(self.dfa.rejects(word), "Word not rejected"
+                            " despite not being in the DFA's language")
 
 
 class NFA:  # supports epsilon transitions
@@ -72,50 +83,62 @@ class NFA:  # supports epsilon transitions
         return not self.accepts(word)
 
 
-def test_NFA():
-    q0 = 0
-    F = {2, 5}
-    delta = {(0, 'a'): {1, 3}, (0, 'b'): {7}, (1, 'b'): {2}, (2, 'c'): {6},
-             (3, 'a'): {5}, (3, 'b'): {4}, (5, 'a'): {4}}
-    nfa = NFA(q0, delta, F)
-    assert nfa.accepts('ab')
-    assert nfa.accepts('aa')
-    assert nfa.rejects('abc')
-    assert nfa.rejects('a')
-    assert nfa.rejects('b')
-    assert nfa.rejects('bbbbbb')
-    assert nfa.rejects('aab')
-    assert nfa.rejects('aaaaaaabc')
-    assert nfa.rejects('aaa')
+class TestNFAMethods(unittest.TestCase):
+    def setUp(self):
+        TestCase = namedtuple('TestCase', 'nfa should_accept should_reject')
+        self.test_cases = []
 
-    q0 = 0
-    F = {3}
-    delta = {(0, ''): {1, 2}, (1, 'a'): {3}, (2, 'b'): {3}}
-    nfa = NFA(q0, delta, F)
-    assert nfa.accepts('a')
-    assert nfa.accepts('b')
-    assert nfa.rejects('ab')
-    assert nfa.rejects('aa')
-    assert nfa.rejects('bba')
+        nfa = NFA(q0=0,
+                  delta={(0, 'a'): {1, 3}, (0, 'b'): {7}, (1, 'b'): {2},
+                         (2, 'c'): {6}, (3, 'a'): {5}, (3, 'b'): {4},
+                         (5, 'a'): {4}},
+                  F={2, 5})
+        should_accept = ['ab', 'aa']
+        should_reject = ['abc', 'a', 'b', 'bbbbbb', 'aab', 'aaaaaaabc', 'aaa']
+        test_case = TestCase(nfa=nfa, should_accept=should_accept,
+                             should_reject=should_reject)
+        self.test_cases.append(test_case)
 
-    q0 = 0
-    F = {3, 4}
-    delta = {(0, ''): {1, 2}, (1, 'a'): {1, 3}, (2, ''): {3}, (3, 'c'): {4}}
-    nfa = NFA(q0, delta, F)
-    assert nfa.accepts('a')
-    assert nfa.rejects('b')
-    assert nfa.rejects('ab')
-    assert nfa.accepts('aa')
-    assert nfa.rejects('bba')
-    assert nfa.accepts('c')
-    assert nfa.accepts('ac')
-    assert nfa.accepts('aac')
-    assert nfa.rejects('ca')
+        nfa = NFA(q0=0,
+                  delta={(0, ''): {1, 2}, (1, 'a'): {3}, (2, 'b'): {3}},
+                  F={3})
+        should_accept = ['a', 'b']
+        should_reject = ['ab', 'aa', 'bba']
+        test_case = TestCase(nfa=nfa, should_accept=should_accept,
+                             should_reject=should_reject)
+        self.test_cases.append(test_case)
 
-if __name__ == '__main__':
-    print('Testing class NFA...')
-    test_NFA()
-    print('Test successful!')
+        nfa = NFA(q0=0,
+                  delta={(0, ''): {1, 2}, (1, 'a'): {1, 3}, (2, ''): {3},
+                         (3, 'c'): {4}},
+                  F={3, 4})
+        should_accept = ['a', 'aa', 'c', 'ac', 'aac']
+        should_reject = ['b', 'ab', 'bba', 'ca']
+        test_case = TestCase(nfa=nfa, should_accept=should_accept,
+                             should_reject=should_reject)
+        self.test_cases.append(test_case)
+
+    def test_Delta(self):
+        # todo: write test
+        pass
+
+    def test_accepts(self):
+        for nfa, should_accept, should_reject in self.test_cases:
+            for word in should_accept:
+                self.assertTrue(nfa.accepts(word), "Word not accepted"
+                                " despite being in the NFA's language")
+            for word in should_reject:
+                self.assertFalse(nfa.accepts(word), "Word accepted"
+                                 " despite not being in the NFA's language")
+
+    def test_rejects(self):
+        for nfa, should_accept, should_reject in self.test_cases:
+            for word in should_accept:
+                self.assertFalse(nfa.rejects(word), "Word rejected"
+                                 " despite being in the NFA's language")
+            for word in should_reject:
+                self.assertTrue(nfa.rejects(word), "Word not rejected"
+                                " despite not being in the NFA's language")
 
 
 def NFA_to_DFA(nfa):
@@ -178,28 +201,29 @@ def NFA_to_DFA(nfa):
     return eps_free_NFA_to_DFA(NFA_to_eps_free_NFA(nfa))
 
 
-# todo: write an automated test
-def test_NFA_to_DFA():
-    q0 = 0
-    F = {3, 4}
-    delta = {(0, ''): {1, 2}, (1, 'a'): {1, 3}, (2, ''): {3}, (3, 'c'): {4}}
-    nfa = NFA(q0, delta, F)
-    dfa = NFA_to_DFA(nfa)
-    print(dfa.q0)
-    print(dfa.delta)
-    print(dfa.F)
+class TestFunction_nfa_to_dfa(unittest.TestCase):
+    def setUp(self):
+        self.test_cases = []
 
-    q0 = 1
-    F = {3, 4}
-    delta = {(1, ''): {3}, (1, '0'): {2}, (2, '1'): {2, 4}, (3, ''): {2},
-             (3, '0'): {4}, (4, '0'): {3}}
-    nfa = NFA(q0, delta, F)
-    dfa = NFA_to_DFA(nfa)
-    print(dfa.q0)
-    print(dfa.delta)
-    print(dfa.F)
+        nfa = NFA(q0=0,
+                  delta={(0, ''): {1, 2}, (1, 'a'): {1, 3}, (2, ''): {3},
+                         (3, 'c'): {4}},
+                  F={3, 4})
+        self.test_cases.append(nfa)
 
-if __name__ == '__main__':
-    print('Testing function NFA_to_DFA(nfa)...')
-    test_NFA_to_DFA()
-    print('Done!')
+        nfa = NFA(q0=1,
+                  delta={(1, ''): {3}, (1, '0'): {2}, (2, '1'): {2, 4},
+                         (3, ''): {2}, (3, '0'): {4}, (4, '0'): {3}},
+                  F={3, 4})
+        self.test_cases.append(nfa)
+
+    # todo: add meaningful error messages
+    def test_for_equivalence(self):
+        for nfa in self.test_cases:
+            dfa = NFA_to_DFA(nfa)
+            word_length_bound = 10
+            for l in range(word_length_bound):
+                words = combinations_with_replacement('abc01', l)
+                for word in words:
+                    self.assertEqual(nfa.accepts(word), dfa.accepts(word))
+                    self.assertEqual(nfa.rejects(word), dfa.rejects(word))
