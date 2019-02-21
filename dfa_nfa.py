@@ -221,9 +221,10 @@ class TestFunction_nfa_to_dfa(unittest.TestCase):
     def test_for_equivalence(self):
         for nfa in self.test_cases:
             dfa = NFA_to_DFA(nfa)
-            word_length_bound = 10
+            word_length_bound = 5
             for l in range(word_length_bound):
-                words = combinations_with_replacement('abc01', l)
-                for word in words:
+                combs = combinations_with_replacement('abc01', l)
+                for comb in combs:
+                    word = ''.join(comb)
                     self.assertEqual(nfa.accepts(word), dfa.accepts(word))
                     self.assertEqual(nfa.rejects(word), dfa.rejects(word))
