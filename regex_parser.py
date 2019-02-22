@@ -13,6 +13,7 @@ has no semantic meaning (only alphanumeric characters are currently supported)
 # todo: go over documentation
 
 import unittest
+from itertools import count
 from dfa_nfa import NFA, NFA_to_DFA
 
 
@@ -37,10 +38,13 @@ def standardize(regex):
 
 class TestFunction_standardize(unittest.TestCase):
     def test_standardize(self):
-        self.assertTrue(standardize(' a |b c') == 'a|b.c')
-        self.assertTrue(standardize('ab| c ') == 'a.b|c')
-        self.assertTrue(standardize(' ( a * b c * ) *') == '(a*.b.c*)*')
-        self.assertTrue(standardize('d | (a*b |c *)e') == 'd|(a*.b|c*).e')
+        input_output = {' a |b c': 'a|b.c',
+                        'ab| c ': 'a.b|c',
+                        ' ( a * b c * ) *': '(a*.b.c*)*',
+                        'd | (a*b |c *)e': 'd|(a*.b|c*).e'}
+
+        for param, result in input_output.items():
+            self.assertEqual(standardize(param), result)
 
 
 def infix_to_prefix(regex):
@@ -90,18 +94,18 @@ def infix_to_prefix(regex):
     return ''.join(result)
 
 
-def test_infix_to_prefix():
-    assert infix_to_prefix('a|b.c') == '|a.bc'
-    assert infix_to_prefix('a.b|c') == '|.abc'
-    assert infix_to_prefix('(a*.b.c*)*') == '*..*ab*c'
-    assert infix_to_prefix('d|(a*.b|c*).e') == '|d.|.*ab*ce'
+class TestFunction_infix_to_prefix(unittest.TestCase):
+    def test_infix_to_prefix(self):
+        input_output = {'a|b.c': '|a.bc',
+                        'a.b|c': '|.abc',
+                        '(a*.b.c*)*': '*..*ab*c',
+                        'd|(a*.b|c*).e': '|d.|.*ab*ce'}
 
-if __name__ == '__main__':
-    print('Testing function infix_to_frefix(regex)...')
-    test_infix_to_prefix()
-    print('Test successful!')
+        for param, result in input_output.items():
+            self.assertEqual(infix_to_prefix(param), result)
 
 
+# todo: implement __str__(self) to print tree structure
 class Node:
     def __init__(self, data, left, right):
         self.data = data
@@ -109,7 +113,7 @@ class Node:
         self.right = right
 
     def __repr__(self):
-        return 'Node({}, {}, {})'.format(self.data, self.left, self.right)
+        return f'Node({self.data}, {self.left}, {self.right})'
 
 
 def construct_parse_tree(regex):
@@ -147,6 +151,7 @@ def construct_parse_tree(regex):
     return tree
 
 
+# todo: rewrite as an automated test
 def test_construct_parse_tree():
     regex = 'd|(a*b|c*)e'
     print('The following should be a parse tree for ' + regex + '...')
@@ -179,6 +184,7 @@ def to_DOT_format(tree):
     return 'digraph { \n' + format_branch(tree) + '}\n'
 
 
+# todo: rewrite as an automated test
 def test_to_DOT_format():
     regex = 'd|(a*b|c*)e'
     tree = construct_parse_tree(regex)
@@ -194,18 +200,16 @@ if __name__ == '__main__':
 
 
 def construct_matcher(regex):
-    state_counter = 0
+    id_gen = count()
 
     def construct_NFA(tree):
         # Thompson's algorithm
-        nonlocal state_counter
         assert tree
         token = tree.data
         if token.isalnum():
             assert(not tree.left and not tree.right)
-            q0 = state_counter
-            q1 = state_counter + 1
-            state_counter += 2
+            q0 = next(id_gen)
+            q1 = next(id_gen)
             delta = {(q0, token): {q1}}
             F = {q1}
         elif token == '*':
@@ -214,9 +218,7 @@ def construct_matcher(regex):
             q0 = son_nfa.q0
             delta = son_nfa.delta
             for q in son_nfa.F:
-                if (q, '') not in delta:
-                    delta[q, ''] = set()
-                delta[q, ''].add(q0)
+                delta.setdefault((q, ''), set()).add(q0)
             F = son_nfa.F.union({q0})
         elif token == '.':
             assert(tree.left and tree.right)
@@ -225,16 +227,13 @@ def construct_matcher(regex):
             q0 = left_nfa.q0
             delta = {**left_nfa.delta, **right_nfa.delta}
             for q in left_nfa.F:
-                if (q, '') not in delta:
-                    delta[q, ''] = set()
-                delta[q, ''].add(right_nfa.q0)
+                delta.setdefault((q, ''), set()).add(right_nfa.q0)
             F = right_nfa.F
         elif token == '|':
             assert(tree.left and tree.right)
             left_nfa = construct_NFA(tree.left)
             right_nfa = construct_NFA(tree.right)
-            q0 = state_counter
-            state_counter += 1
+            q0 = next(id_gen)
             delta = {**left_nfa.delta, **right_nfa.delta}
             delta[q0, ''] = {left_nfa.q0, right_nfa.q0}
             F = left_nfa.F.union(right_nfa.F)

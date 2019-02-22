@@ -2,7 +2,7 @@
 
 import unittest
 from collections import namedtuple
-from itertools import chain, combinations_with_replacement
+from itertools import chain, combinations_with_replacement, count
 
 
 class DFA:
@@ -159,32 +159,30 @@ def NFA_to_DFA(nfa):
         # The classical subset construction
         alphabet = set(ch for _, ch in nfa.delta)
         assert '' not in alphabet
-        state_counter = 0
-        new_q0 = state_counter
-        new_states = {state_counter: {nfa.q0}}
-        state_counter += 1
+        id_gen = count()
+        new_q0 = next(id_gen)
+        state_origins = {new_q0: {nfa.q0}}
         new_delta = {}
         work_set = {new_q0}
         while work_set:
             q = work_set.pop()
-            state_set = new_states[q]
+            q_origin = state_origins[q]
             for ch in alphabet:
-                next_state_set = nfa.Delta(state_set, ch)
-                if not next_state_set:
+                next_state_origin = nfa.Delta(q_origin, ch)
+                if not next_state_origin:
                     continue
-                if next_state_set in new_states.values():
-                    next_q = {r for r in new_states
-                              if new_states[r] == next_state_set}.pop()
-                else:
-                    next_q = state_counter
-                    new_states[state_counter] = next_state_set
-                    state_counter += 1
+                try:
+                    next_q = {state for state, origin in state_origins.items()
+                              if origin == next_state_origin}.pop()
+                except KeyError:
+                    next_q = next(id_gen)
+                    state_origins[next_q] = next_state_origin
                     work_set.add(next_q)
                 assert (q, ch) not in new_delta
                 new_delta[q, ch] = next_q
         new_F = set()
-        for q in new_states:
-            if new_states[q] & nfa.F:
+        for q in state_origins:
+            if state_origins[q] & nfa.F:
                 new_F.add(q)
         return DFA(new_q0, new_delta, new_F)
 
