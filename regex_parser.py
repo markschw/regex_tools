@@ -23,27 +23,27 @@ def standardize(regex):
     with explicit concatenations (by inserting '.' where necessary).
     '''
     regex = [ch for ch in regex if not ch.isspace()]
-    result = []
+    result = ''
     for i in range(len(regex)):
-        result.append(regex[i])
+        result += regex[i]
         if i == len(regex) - 1:
             break
         pattern = ''.join('A' if ch.isalnum() else ch
                           for ch in regex[i:i + 2])
         concatenation_patterns = {'AA', 'A(', '*A', '*(', ')(', ')A'}
         if pattern in concatenation_patterns:
-            result.append('.')
-    return ''.join(result)
+            result += '.'
+    return result
 
 
 class TestFunction_standardize(unittest.TestCase):
     def test_standardize(self):
-        input_output = {' a |b c': 'a|b.c',
-                        'ab| c ': 'a.b|c',
-                        ' ( a * b c * ) *': '(a*.b.c*)*',
-                        'd | (a*b |c *)e': 'd|(a*.b|c*).e'}
+        param_results = {' a |b c': 'a|b.c',
+                         'ab| c ': 'a.b|c',
+                         ' ( a * b c * ) *': '(a*.b.c*)*',
+                         'd | (a*b |c *)e': 'd|(a*.b|c*).e'}
 
-        for param, result in input_output.items():
+        for param, result in param_results.items():
             self.assertEqual(standardize(param), result)
 
 
@@ -58,22 +58,22 @@ def infix_to_prefix(regex):
     # A version of Dijkstra's shunting-yard algorithm
     regex = standardize(regex)
     op_stack = []
-    result = []
+    result = ''
     for ch in reversed(regex):
         if ch.isspace():
             continue
         if ch.isalnum():
-            result.append(ch)
+            result += ch
         elif ch == '*':
             op_stack.append(ch)
         elif ch == '.':
             while op_stack and op_stack[-1] == '*':
-                result.append('*')
+                result += '*'
                 op_stack.pop()
             op_stack.append(ch)
         elif ch == '|':
             while op_stack and op_stack[-1] in '.*':
-                result.append(op_stack[-1])
+                result += op_stack[-1]
                 op_stack.pop()
             op_stack.append(ch)
         elif ch == ')':
@@ -81,31 +81,30 @@ def infix_to_prefix(regex):
         elif ch == '(':
             assert op_stack
             while op_stack[-1] != ')':
-                result.append(op_stack[-1])
+                result += op_stack[-1]
                 op_stack.pop()
             op_stack.pop()  # pop the ')'
             if op_stack:
-                result.append(op_stack[-1])
+                result += op_stack[-1]
                 op_stack.pop()
         else:
             raise ValueError('Given regex contains an invalid character.')
-    result.extend(reversed(op_stack))
-    result.reverse()
-    return ''.join(result)
+    result += ''.join(reversed(op_stack))
+    result = result[::-1]
+    return result
 
 
 class TestFunction_infix_to_prefix(unittest.TestCase):
     def test_infix_to_prefix(self):
-        input_output = {'a|b.c': '|a.bc',
-                        'a.b|c': '|.abc',
-                        '(a*.b.c*)*': '*..*ab*c',
-                        'd|(a*.b|c*).e': '|d.|.*ab*ce'}
+        param_results = {'a|b.c': '|a.bc',
+                         'a.b|c': '|.abc',
+                         '(a*.b.c*)*': '*..*ab*c',
+                         'd|(a*.b|c*).e': '|d.|.*ab*ce'}
 
-        for param, result in input_output.items():
+        for param, result in param_results.items():
             self.assertEqual(infix_to_prefix(param), result)
 
 
-# todo: implement __str__(self) to print tree structure
 class Node:
     def __init__(self, data, left, right):
         self.data = data
@@ -114,6 +113,17 @@ class Node:
 
     def __repr__(self):
         return f'Node({self.data}, {self.left}, {self.right})'
+
+    def __str__(self):
+        def aux(tree, indent=''):
+            result = f'{indent}+- {tree.data!r}'
+            if tree.left:
+                result += '\n' + aux(tree.left, indent=indent + '|  ')
+            if tree.right:
+                result += '\n' + aux(tree.right, indent=indent + '|  ')
+            return result
+
+        return aux(self)
 
 
 def construct_parse_tree(regex):
@@ -219,7 +229,7 @@ def construct_matcher(regex):
             delta = son_nfa.delta
             for q in son_nfa.F:
                 delta.setdefault((q, ''), set()).add(q0)
-            F = son_nfa.F.union({q0})
+            F = son_nfa.F | {q0}
         elif token == '.':
             assert(tree.left and tree.right)
             left_nfa = construct_NFA(tree.left)
@@ -236,7 +246,7 @@ def construct_matcher(regex):
             q0 = next(id_gen)
             delta = {**left_nfa.delta, **right_nfa.delta}
             delta[q0, ''] = {left_nfa.q0, right_nfa.q0}
-            F = left_nfa.F.union(right_nfa.F)
+            F = left_nfa.F | right_nfa.F
         else:
             assert 0, 'Invalid token found in tree: ' + token
         return NFA(q0, delta, F)

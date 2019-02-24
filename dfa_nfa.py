@@ -37,15 +37,15 @@ class TestDFAMethods(unittest.TestCase):
 
     def test_accepts_and_rejects(self):
         for word in self.should_accept:
-            self.assertTrue(self.dfa.accepts(word), f"{word} not accepted"
-                            f" by {self.dfa} despite being in its language")
-            self.assertFalse(self.dfa.rejects(word), f"{word} rejected"
-                             f" by {self.dfa} despite being in its language")
+            self.assertTrue(self.dfa.accepts(word), f'{word} not accepted'
+                            f' by {self.dfa} despite being in its language')
+            self.assertFalse(self.dfa.rejects(word), f'{word} rejected'
+                             f' by {self.dfa} despite being in its language')
         for word in self.should_reject:
-            self.assertFalse(self.dfa.accepts(word), f"{word} accepted by"
-                             f" {self.dfa} despite not being in its language")
-            self.assertTrue(self.dfa.rejects(word), f"{word} not rejected by"
-                            f" {self.dfa} despite being in its language")
+            self.assertFalse(self.dfa.accepts(word), f'{word} accepted by'
+                             f' {self.dfa} despite not being in its language')
+            self.assertTrue(self.dfa.rejects(word), f'{word} not rejected by'
+                            f' {self.dfa} despite being in its language')
 
 
 class NFA:  # supports epsilon transitions
@@ -75,11 +75,11 @@ class NFA:  # supports epsilon transitions
         return result
 
     def accepts(self, word):
-        current_state_set = self._epsilon_closure({self.q0})
+        current_states = self._epsilon_closure({self.q0})
         for ch in word:
-            current_state_set = self.Delta(current_state_set, ch)
-            current_state_set = self._epsilon_closure(current_state_set)
-        return bool(current_state_set & self.F)
+            current_states = self.Delta(current_states, ch)
+            current_states = self._epsilon_closure(current_states)
+        return bool(current_states & self.F)
 
     def rejects(self, word):
         return not self.accepts(word)
@@ -87,7 +87,7 @@ class NFA:  # supports epsilon transitions
 
 class TestNFAMethods(unittest.TestCase):
     def setUp(self):
-        TestInput = namedtuple('TestData', 'nfa should_accept should_reject')
+        TestInput = namedtuple('TestInput', 'nfa should_accept should_reject')
         self.test_inputs = []
 
         nfa = NFA(q0=0,
@@ -127,15 +127,15 @@ class TestNFAMethods(unittest.TestCase):
     def test_accepts_and_rejects(self):
         for nfa, should_accept, should_reject in self.test_inputs:
             for word in should_accept:
-                self.assertTrue(nfa.accepts(word), f"{word} not accepted by"
-                                f" {nfa} despite being in its language")
-                self.assertFalse(nfa.rejects(word), f"{word} rejected by"
-                                 f" {nfa} despite being in its language")
+                self.assertTrue(nfa.accepts(word), f'{word} not accepted by'
+                                f' {nfa} despite being in its language')
+                self.assertFalse(nfa.rejects(word), f'{word} rejected by'
+                                 f' {nfa} despite being in its language')
             for word in should_reject:
-                self.assertFalse(nfa.accepts(word), f"{word} accepted by"
-                                 f" {nfa} despite not being in its language")
-                self.assertTrue(nfa.rejects(word), f"{word} not rejected by"
-                                f" {nfa} despite not being in its language")
+                self.assertFalse(nfa.accepts(word), f'{word} accepted by'
+                                 f' {nfa} despite not being in its language')
+                self.assertTrue(nfa.rejects(word), f'{word} not rejected by'
+                                f' {nfa} despite not being in its language')
 
 
 def NFA_to_DFA(nfa):
@@ -157,7 +157,7 @@ def NFA_to_DFA(nfa):
 
     def eps_free_NFA_to_DFA(nfa):
         # The classical subset construction
-        alphabet = set(ch for _, ch in nfa.delta)
+        alphabet = {ch for _, ch in nfa.delta}
         assert '' not in alphabet
         id_gen = count()
         new_q0 = next(id_gen)
@@ -205,7 +205,6 @@ class TestFunction_nfa_to_dfa(unittest.TestCase):
                   F={3, 4})
         self.test_inputs.append(nfa)
 
-    # todo: add meaningful error messages
     def test_for_equivalence(self):
         for nfa in self.test_inputs:
             dfa = NFA_to_DFA(nfa)
@@ -218,14 +217,14 @@ class TestFunction_nfa_to_dfa(unittest.TestCase):
                 nfa_accepts = nfa.accepts(word)
                 dfa_accepts = dfa.accepts(word)
                 self.assertEqual(nfa_accepts, dfa_accepts,
-                                 f"d={dfa} should be equivalent to n={nfa},"
-                                 f" but only one of them accepts w={word!r}:\n"
-                                 f"\tn.accepts(w) == {nfa_accepts}, "
-                                 f"d.accepts(w) == {dfa_accepts}")
+                                 f'd={dfa} should be equivalent to n={nfa},'
+                                 f' but only one of them accepts w={word!r}:\n'
+                                 f'\tn.accepts(w) == {nfa_accepts}, '
+                                 f'd.accepts(w) == {dfa_accepts}')
                 nfa_rejects = nfa.rejects(word)
                 dfa_rejects = dfa.rejects(word)
                 self.assertEqual(nfa_rejects, dfa_rejects,
-                                 f"d={dfa} should be equivalent to n={nfa},"
-                                 f" but only one of them rejects w={word!r}:\n"
-                                 f"\tn.rejects(w) == {nfa_rejects},"
-                                 f"d.rejects(w) == {dfa_rejects}")
+                                 f'd={dfa} should be equivalent to n={nfa},'
+                                 f' but only one of them rejects w={word!r}:\n'
+                                 f'\tn.rejects(w) == {nfa_rejects},'
+                                 f'd.rejects(w) == {dfa_rejects}')
