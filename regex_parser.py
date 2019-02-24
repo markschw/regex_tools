@@ -13,6 +13,7 @@ has no semantic meaning (only alphanumeric characters are currently supported)
 # todo: go over documentation
 
 import unittest
+from collections import namedtuple
 from itertools import count
 from dfa_nfa import NFA, NFA_to_DFA
 
@@ -118,9 +119,9 @@ class Node:
         def aux(tree, indent=''):
             result = f'{indent}+- {tree.data!r}'
             if tree.left:
-                result += '\n' + aux(tree.left, indent=indent + '|  ')
+                result += '\n' + aux(tree.left, indent=indent + '|   ')
             if tree.right:
-                result += '\n' + aux(tree.right, indent=indent + '|  ')
+                result += '\n' + aux(tree.right, indent=indent + '|   ')
             return result
 
         return aux(self)
@@ -254,41 +255,39 @@ def construct_matcher(regex):
     return NFA_to_DFA(construct_NFA(construct_parse_tree(regex)))
 
 
-# todo: a more comprehensive test
-def test_construct_matcher():
-    matcher = construct_matcher('d|(a*b|c*)e')
-    # review:
-    # print(matcher.delta)
-    assert matcher.accepts('d')
-    assert matcher.accepts('e')
-    assert matcher.accepts('ce')
-    assert matcher.accepts('ccce')
-    assert matcher.accepts('be')
-    assert matcher.accepts('abe')
-    assert matcher.accepts('aabe')
-    assert matcher.rejects('')
-    assert matcher.rejects('da')
-    assert matcher.rejects('ec')
-    assert matcher.rejects('de')
-    assert matcher.rejects('b')
-    assert matcher.rejects('a')
-    assert matcher.rejects('ae')
-    assert matcher.rejects('ab')
-    assert matcher.rejects('ace')
-    assert matcher.rejects('abce')
-    assert matcher.rejects('dabe')
+class TestFunction_construct_matcher(unittest.TestCase):
+    def setUp(self):
+        TestInput = namedtuple('TestInput',
+                               'regex should_match should_not_match')
+        self.test_inputs = []
 
-    # review:
-    matcher2 = construct_matcher('a*b*')
-    assert matcher2.accepts('')
-    assert matcher2.accepts('a')
-    assert matcher2.accepts('b')
-    assert matcher2.accepts('ab')
-    assert matcher2.accepts('aabb')
-    assert matcher2.rejects('ba')
-    assert matcher2.rejects('aba')
+        regex = 'd|(a*b|c*)e'
+        should_match = ['d', 'e', 'ce', 'ccce', 'be', 'abe', 'aabe']
+        should_not_match = ['', 'da', 'dabe' 'dae', 'db', 'de', 'dce', 'a',
+                            'ab', 'abc', 'abce', 'ac', 'ace', 'ad', 'ae', 'b',
+                            'ba', 'bc', 'bce', 'bd', 'bde', 'ea', 'eb', 'ec',
+                            'ed', 'ee', 'cee', 'bee', 'abee', 'aabee']
+        test_input = TestInput(regex=regex, should_match=should_match,
+                               should_not_match=should_not_match)
+        self.test_inputs.append(test_input)
 
-if __name__ == '__main__':
-    print('Testing function construct_matcher(regex)...')
-    test_construct_matcher()
-    print('Test successful!')
+        regex = 'a*b*'
+        should_match = ['', 'a', 'aa', 'b', 'bb', 'ab', 'aab', 'abb', 'aabb']
+        should_not_match = ['aba', 'aabba', 'ba', 'bba', 'bbab']
+        test_input = TestInput(regex=regex, should_match=should_match,
+                               should_not_match=should_not_match)
+        self.test_inputs.append(test_input)
+
+    def test_construct_matcher(self):
+        for regex, should_match, should_not_match in self.test_inputs:
+            matcher = construct_matcher(regex)
+            for word in should_match:
+                self.assertTrue(matcher.accepts(word), f'{word!r} rejected by'
+                                f' the matcher constructed from {regex!r}'
+                                f' despite being in the language of that'
+                                f' regex. Here is the matcher:\n\t{matcher}')
+            for word in should_not_match:
+                self.assertTrue(matcher.rejects(word), f'{word!r} accepted by'
+                                f' the matcher constructed from {regex!r}'
+                                f' despite not being in the language of that'
+                                f' regex. Here is the matcher:\n\t{matcher}')

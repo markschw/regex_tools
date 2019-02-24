@@ -1,4 +1,5 @@
 # todo: more extensive documentation
+# todo: add a function to translate a DFA/NFA to the DOT format
 
 import unittest
 from collections import namedtuple
