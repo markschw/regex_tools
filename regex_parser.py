@@ -13,7 +13,7 @@ has no semantic meaning (only alphanumeric characters are currently supported)
 # todo: go over documentation
 
 import unittest
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 from itertools import count
 from dfa_nfa import NFA, NFA_to_DFA
 
@@ -118,10 +118,9 @@ class Node:
     def __str__(self):
         def aux(tree, indent=''):
             result = f'{indent}+- {tree.data!r}'
-            if tree.left:
-                result += '\n' + aux(tree.left, indent=indent + '|   ')
-            if tree.right:
-                result += '\n' + aux(tree.right, indent=indent + '|   ')
+            for subtree in [tree.left, tree.right]:
+                if subtree is not None:
+                    result += '\n' + aux(subtree, indent=indent + '|   ')
             return result
 
         return aux(self)
@@ -162,52 +161,48 @@ def construct_parse_tree(regex):
     return tree
 
 
-# todo: rewrite as an automated test
-def test_construct_parse_tree():
-    regex = 'd|(a*b|c*)e'
-    print('The following should be a parse tree for ' + regex + '...')
-    tree = construct_parse_tree(regex)
-    print(tree)
-    print('Parse tree printed!')
-
-if __name__ == '__main__':
-    print('Testing function construct_parse_tree()...')
-    test_construct_parse_tree()
-    print('Done!')
+class TestFunction_construct_parse_tree(unittest.TestCase):
+    def test_construct_parse_tree(self):
+        regex = 'd|(a*b|c*)e'
+        tree = construct_parse_tree(regex)
+        print('\n' + '+'*50)
+        print('The following should be a parse tree for ' + regex + '...')
+        print(tree)
+        print('Done!')
+        print('+'*50)
 
 
 def to_DOT_format(tree):
     '''
     Returns a string in the DOT format which represents the given tree.
     '''
+    id_gen = count()
+    node_ids = defaultdict(lambda: next(id_gen))
+
     def format_branch(tree):
         if tree is None:
             return ''
-        # todo: use a counter to label the states instead of node ids.
         sons = format_branch(tree.left) + format_branch(tree.right)
-        father = str(id(tree)) + ' [label="' + str(tree.data) + '"];\n'
+        father = str(node_ids[tree]) + ' [label="' + str(tree.data) + '"];\n'
         edges = ''
-        for node in [tree.left, tree.right]:
-            if node is not None:
-                edges += str(id(tree)) + ' -> ' + str(id(node)) + ';\n'
+        for subtree in [tree.left, tree.right]:
+            if subtree is not None:
+                edges += str(node_ids[tree]) + ' -> ' + str(node_ids[subtree]) + ';\n'
         return sons + father + edges
 
     return 'digraph { \n' + format_branch(tree) + '}\n'
 
 
-# todo: rewrite as an automated test
-def test_to_DOT_format():
-    regex = 'd|(a*b|c*)e'
-    tree = construct_parse_tree(regex)
-    print('The following should be a representation of the parse tree of',
-          regex, 'in the DOT format...')
-    print(to_DOT_format(tree))
-    print('DOT-format tree printed!')
-
-if __name__ == '__main__':
-    print('Testing function to_DOT_format()...')
-    test_to_DOT_format()
-    print('Done!')
+class TestFunction_to_DOT_format(unittest.TestCase):
+    def test_to_DOT_format(self):
+        regex = 'd|(a*b|c*)e'
+        dot_tree = to_DOT_format(construct_parse_tree(regex))
+        print('\n' + '+'*50)
+        print('The following should be a representation of the parse tree of',
+              regex, 'in the DOT format...')
+        print(dot_tree)
+        print('Done!')
+        print('+'*50)
 
 
 def construct_matcher(regex):
