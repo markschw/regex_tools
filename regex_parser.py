@@ -187,7 +187,8 @@ def to_DOT_format(tree):
         edges = ''
         for subtree in [tree.left, tree.right]:
             if subtree is not None:
-                edges += str(node_ids[tree]) + ' -> ' + str(node_ids[subtree]) + ';\n'
+                edges += str(node_ids[tree]) + ' -> '
+                edges += str(node_ids[subtree]) + ';\n'
         return sons + father + edges
 
     return 'digraph { \n' + format_branch(tree) + '}\n'
