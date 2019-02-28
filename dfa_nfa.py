@@ -26,8 +26,12 @@ class DFA:
     def rejects(self, word):
         return not self.accepts(word)
 
+    # todo:
+    def to_DOT_format(dfa):
+        pass
 
-class TestDFAMethods(unittest.TestCase):
+
+class TestDFA(unittest.TestCase):
     def setUp(self):
         q0 = 0
         F = {1}
@@ -86,7 +90,7 @@ class NFA:  # supports epsilon transitions
         return not self.accepts(word)
 
 
-class TestNFAMethods(unittest.TestCase):
+class TestNFA(unittest.TestCase):
     def setUp(self):
         TestInput = namedtuple('TestInput', 'nfa should_accept should_reject')
         self.test_inputs = []
@@ -121,8 +125,8 @@ class TestNFAMethods(unittest.TestCase):
                                should_reject=should_reject)
         self.test_inputs.append(test_input)
 
+    # todo:
     def test_Delta(self):
-        # todo: write test
         pass
 
     def test_accepts_and_rejects(self):
