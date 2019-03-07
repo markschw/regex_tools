@@ -1,13 +1,13 @@
 # todo: more extensive documentation
 # todo: add a function to translate a DFA/NFA to the DOT format
 
-import unittest
 from collections import namedtuple
 from itertools import chain, combinations_with_replacement, count
+import unittest
 
 
 class DFA:
-    def __init__(self, q0, delta, F):
+    def __init__(self, *, q0, delta, F):
         self.q0 = q0
         self.delta = delta
         self.F = F
@@ -36,7 +36,7 @@ class TestDFA(unittest.TestCase):
         q0 = 0
         F = {1}
         delta = {(0, 'a'): 1, (1, 'a'): 0}
-        self.dfa = DFA(q0, delta, F)
+        self.dfa = DFA(q0=q0, delta=delta, F=F)
         self.should_accept = ['a', 'aaa']
         self.should_reject = ['', 'aa', 'b', 'ab']
 
@@ -54,7 +54,7 @@ class TestDFA(unittest.TestCase):
 
 
 class NFA:  # supports epsilon transitions
-    def __init__(self, q0, delta, F):
+    def __init__(self, *, q0, delta, F):
         self.q0 = q0
         self.delta = delta
         self.F = F
@@ -158,7 +158,7 @@ def NFA_to_DFA(nfa):
         new_F = nfa.F
         if new_F & other_start_states:
             new_F.add(new_q0)
-        return NFA(new_q0, new_delta, new_F)
+        return NFA(q0=new_q0, delta=new_delta, F=new_F)
 
     def eps_free_NFA_to_DFA(nfa):
         # The classical subset construction
@@ -189,7 +189,7 @@ def NFA_to_DFA(nfa):
         for q in state_origins:
             if state_origins[q] & nfa.F:
                 new_F.add(q)
-        return DFA(new_q0, new_delta, new_F)
+        return DFA(q0=new_q0, delta=new_delta, F=new_F)
 
     return eps_free_NFA_to_DFA(NFA_to_eps_free_NFA(nfa))
 

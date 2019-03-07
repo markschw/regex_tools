@@ -12,9 +12,10 @@ has no semantic meaning (only alphanumeric characters are currently supported)
 # todo: handle invalid inputs to functions
 # todo: go over documentation
 
-import unittest
 from collections import namedtuple, defaultdict
 from itertools import count
+import unittest
+
 from dfa_nfa import NFA, NFA_to_DFA
 
 
@@ -63,7 +64,7 @@ def infix_to_prefix(regex):
     for ch in reversed(regex):
         if ch.isspace():
             continue
-        if ch.isalnum():
+        elif ch.isalnum():
             result += ch
         elif ch == '*':
             op_stack.append(ch)
@@ -104,6 +105,11 @@ class TestFunction_infix_to_prefix(unittest.TestCase):
 
         for param, result in param_results.items():
             self.assertEqual(infix_to_prefix(param), result)
+
+        bad_params = {'a|@b', 'a*|b.c$', '(a*.b)*#', '^(a.a.b)|(b.b.c)'}
+        for param in bad_params:
+            with self.assertRaises(ValueError):
+                infix_to_prefix(param)
 
 
 class Node:
@@ -148,6 +154,7 @@ class Node:
         return 'digraph { \n' + format_branch(self) + '}\n'
 
 
+# review: this should probably be somewhere else.
 class TestNode(unittest.TestCase):
     def test_to_DOT(self):
         regex = 'd|(a*b|c*)e'
@@ -246,7 +253,7 @@ def construct_matcher(regex):
             F = left_nfa.F | right_nfa.F
         else:
             assert 0, 'Invalid token found in tree: ' + token
-        return NFA(q0, delta, F)
+        return NFA(q0=q0, delta=delta, F=F)
 
     return NFA_to_DFA(construct_NFA(construct_parse_tree(regex)))
 
